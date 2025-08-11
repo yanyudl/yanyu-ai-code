@@ -7,7 +7,8 @@ spring:
     url: jdbc:mysql://localhost:3306/yanyu_ai_code
     username: root
     password: 20040301
-
+  profiles:
+    active: local
 server:
   port: 8123
   servlet:
