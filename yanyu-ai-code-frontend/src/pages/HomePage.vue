@@ -3,6 +3,6 @@
 
 <template>
   <main>
-    首页
+    主页
   </main>
 </template>

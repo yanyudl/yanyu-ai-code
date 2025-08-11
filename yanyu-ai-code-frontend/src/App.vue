@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import BasicLayout from '@/layouts/BasicLayout.vue'
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
 
-import { healthCheck } from '@/api/healthController.ts'
-
-healthCheck().then((res) => {
-  console.log(res)
-})
+dayjs.locale('zh-cn')
+const locale = zhCN
 </script>
 
 <template>
-  <BasicLayout />
+  <a-config-provider :locale="locale">
+    <BasicLayout />
+  </a-config-provider>
+  
 </template>
 
-<style></style>
+<style>
+
+</style>
