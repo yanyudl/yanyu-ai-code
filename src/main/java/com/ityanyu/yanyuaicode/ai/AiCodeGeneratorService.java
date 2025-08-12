@@ -1,6 +1,9 @@
 package com.ityanyu.yanyuaicode.ai;
 
+import com.ityanyu.yanyuaicode.ai.model.HtmlCodeResult;
+import com.ityanyu.yanyuaicode.ai.model.MultiFileCodeResult;
 import dev.langchain4j.service.SystemMessage;
+import reactor.core.publisher.Flux;
 
 /**
  * @author: dl
@@ -16,7 +19,7 @@ public interface AiCodeGeneratorService {
      * @return AI输出结果
      */
     @SystemMessage(fromResource = "prompt/codegen-html-system-prompt.txt")
-    String generateHtmlCode(String userMessage);
+    HtmlCodeResult generateHtmlCode(String userMessage);
 
     /**
      * 生成多文件代码
@@ -25,6 +28,24 @@ public interface AiCodeGeneratorService {
      * @return AI输出结果
      */
     @SystemMessage(fromResource = "prompt/codegen-multi-file-svstem-prompt.txt")
-    String generateMultiFileCode(String userMessage);
+    MultiFileCodeResult generateMultiFileCode(String userMessage);
+
+    /**
+     * 生成 HTML 代码（流式输出）
+     *
+     * @param userMessage 用户提示词
+     * @return AI输出结果
+     */
+    @SystemMessage(fromResource = "prompt/codegen-html-system-prompt.txt")
+    Flux<String> generateHtmlCodeStream(String userMessage);
+
+    /**
+     * 生成多文件代码（流式输出）
+     *
+     * @param userMessage 用户提示词
+     * @return AI输出结果
+     */
+    @SystemMessage(fromResource = "prompt/codegen-multi-file-svstem-prompt.txt")
+    Flux<String> generateMultiFileCodeStream(String userMessage);
 }
 
