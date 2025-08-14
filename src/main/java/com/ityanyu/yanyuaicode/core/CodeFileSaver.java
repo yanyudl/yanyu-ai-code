@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @Date: 2025/8/12
  * @Description: 文件写入工具类
  **/
+@Deprecated
 public class CodeFileSaver {
 
     /**
