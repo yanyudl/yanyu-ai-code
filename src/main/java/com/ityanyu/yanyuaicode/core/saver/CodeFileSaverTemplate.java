@@ -29,11 +29,11 @@ public abstract class CodeFileSaverTemplate<T> {
      * @param result 代码结果对象
      * @return 保存的文件目录对象
      */
-    public final File saveCode(T result){
+    public final File saveCode(T result,Long appId){
         //1.验证输入
         validateInput(result);
         //2.构建唯一目录
-        String baseDirPath = buildUniqueDir();
+        String baseDirPath = buildUniqueDir(appId);
         //3.保存文件（由子类实现）
         saveFiles(result,baseDirPath);
         //4.返回文件目录对象
@@ -54,9 +54,9 @@ public abstract class CodeFileSaverTemplate<T> {
     /**
      * 构建目录的唯一路径
      */
-    private final String buildUniqueDir() {
+    private final String buildUniqueDir(Long appId) {
         String codeType = getCodeType().getValue();
-        String uniqueDirName = StrUtil.format("{}_{}", codeType, IdUtil.getSnowflakeNextIdStr());
+        String uniqueDirName = StrUtil.format("{}_{}", codeType, appId);
         String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
         FileUtil.mkdir(dirPath);
         return dirPath;

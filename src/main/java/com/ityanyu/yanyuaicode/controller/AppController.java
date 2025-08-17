@@ -2,6 +2,7 @@ package com.ityanyu.yanyuaicode.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.ityanyu.yanyuaicode.annotation.AuthCheck;
 import com.ityanyu.yanyuaicode.common.BaseResponse;
 import com.ityanyu.yanyuaicode.common.DeleteRequest;
@@ -24,18 +25,19 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.bind.annotation.*;
 import com.ityanyu.yanyuaicode.service.AppService;
-import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
- *  控制层。
+ * 控制层。
  *
  * @author <a href="https://github.com/yanyu">烟雨</a>
  */
@@ -48,6 +50,43 @@ public class AppController {
 
     @Resource
     private UserService userService;
+
+    /**
+     * @param appId   应用 ID
+     * @param message 提示词
+     * @param request 请求对象
+     * @return 生成结果流
+     */
+    @GetMapping(value = "chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
+                                                       @RequestParam String message,
+                                                       HttpServletRequest request) {
+        // 校验参数
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        ThrowUtils.throwIf(message == null, ErrorCode.PARAMS_ERROR, "提示词不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用 service 生成代码（流式输出）
+        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
+        // 转化为 ServerSentEvent格式，解决空格丢失问题
+        return contentFlux
+                .map(chunk -> {
+                    // 将内容包装为 JSON 对象
+                    Map<String, String> wrapper = Map.of("d", chunk);
+                    String jsonData = JSONUtil.toJsonStr(wrapper);
+                    return ServerSentEvent.<String>builder()
+                            .data(jsonData)
+                            .build();
+                })
+                //主动告诉前端结束，增加一个事件
+                .concatWith(Mono.just(
+                        // 发送结束事件
+                        ServerSentEvent.<String>builder()
+                                .event("done")
+                                .data("")
+                                .build()
+                ));
+    }
 
     /**
      * 创建应用
@@ -137,7 +176,7 @@ public class AppController {
     /**
      * 根据 id 获取应用详情
      *
-     * @param id      应用 id
+     * @param id 应用 id
      * @return 应用详情
      */
     @GetMapping("/get/vo")
