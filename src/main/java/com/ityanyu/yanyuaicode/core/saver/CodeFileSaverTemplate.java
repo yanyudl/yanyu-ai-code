@@ -3,6 +3,7 @@ package com.ityanyu.yanyuaicode.core.saver;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ityanyu.yanyuaicode.constant.AppConstant;
 import com.ityanyu.yanyuaicode.exception.BusinessException;
 import com.ityanyu.yanyuaicode.exception.ErrorCode;
 import com.ityanyu.yanyuaicode.model.enums.CodeGenTypeEnum;
@@ -20,7 +21,7 @@ public abstract class CodeFileSaverTemplate<T> {
     /**
      * 文件保存的根目录
      */
-    private static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    private static final String FILE_SAVE_ROOT_DIR = AppConstant.CODE_OUTPUT_ROOT_DIR;
 
 
     /**
