@@ -15,36 +15,12 @@
 
 <style scoped>
 .footer {
-  background: #efefef;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
   text-align: center;
   padding: 20px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-
-.footer-content {
-  position: relative;
-  z-index: 4;
-  padding: 2px 0;
-}
-
-.footer-content p {
-  color: #8d8a8a;
-  margin-bottom: 1px;
-  font-size: 12px;
-  line-height: 1.2;
-}
-
-.footer-link {
-  color: #8d8a8a !important; /* 默认灰色 */
-  text-decoration: none; /* 可选：去掉下划线 */
-  transition: color 0.3s; /* 平滑过渡效果 */
-}
-
-.footer-link:hover {
-  color: #1890ff !important; /* 悬停时变为蓝色（Ant Design 主题色） */
+  margin-top: 40px;
+  border-top: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 .copyright {
