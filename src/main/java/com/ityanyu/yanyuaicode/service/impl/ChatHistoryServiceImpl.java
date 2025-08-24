@@ -1,5 +1,6 @@
 package com.ityanyu.yanyuaicode.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ityanyu.yanyuaicode.exception.ErrorCode;
 import com.ityanyu.yanyuaicode.exception.ThrowUtils;
@@ -15,11 +16,16 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.ityanyu.yanyuaicode.model.entity.ChatHistory;
 import com.ityanyu.yanyuaicode.mapper.ChatHistoryMapper;
 import com.ityanyu.yanyuaicode.service.ChatHistoryService;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  *  服务层实现。
@@ -27,6 +33,7 @@ import java.time.LocalDateTime;
  * @author <a href="https://github.com/yanyu">烟雨</a>
  */
 @Service
+@Slf4j
 public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatHistory>  implements ChatHistoryService{
 
     @Lazy
@@ -54,6 +61,44 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
                 .userId(userId)
                 .build();
         return this.save(chatHistory);
+    }
+
+    /**
+     * 在每次创建 AI 实例时，加载对话历史到 redis
+     */
+    @Override
+    public int loadChatHistoryToMemory(Long appId, MessageWindowChatMemory chatMemory,int MaxCount) {
+        try {
+            // 直接构造查询条件，起始点为 1而不是0，用于排除最新的用户消息
+            QueryWrapper queryWrapper = QueryWrapper.create()
+                    .eq("appId", appId)
+                    .orderBy("createTime", false)
+                    .limit(1,MaxCount);
+            List<ChatHistory> historyList = this.list(queryWrapper);
+            // 校验是否为空
+            if (CollUtil.isEmpty(historyList)) {
+                return 0;
+            }
+            // 反转顺序
+            historyList = historyList.reversed();
+            int loadCount = 0;
+            // 添加到内存中
+            chatMemory.clear();
+            for (ChatHistory history : historyList) {
+                if (ChatHistoryMessageTypeEnum.USER.getValue().equals(history.getMessageType())) {
+                    chatMemory.add(UserMessage.from(history.getMessage()));
+                } else if (ChatHistoryMessageTypeEnum.AI.getValue().equals(history.getMessageType())) {
+                    chatMemory.add(AiMessage.from(history.getMessage()));
+                }
+                loadCount++;
+            }
+            log.info("成功为appId：{}加载了{}条历史对话",appId, loadCount);
+            return loadCount;
+        }catch (Exception e){
+            log.info("加载历史对话失败，appId：{}，error：{}", appId, e.getMessage(),e);
+            //加载失败不影响系统运行，只是没有历史上下文
+            return 0;
+        }
     }
 
     /**
@@ -113,7 +158,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
                                                       User loginUser) {
         // 1. 检查参数是否合法
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID不能为空");
-        ThrowUtils.throwIf(pageSize >= 0 && pageSize <=50, ErrorCode.PARAMS_ERROR, "页面大小必须在1-50之间");
+        ThrowUtils.throwIf(!(pageSize >= 0 && pageSize <=50), ErrorCode.PARAMS_ERROR, "页面大小必须在1-50之间");
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
         // 2. 校验权限 只有本人和管理员能够查看
         App app = appService.getById(appId);

@@ -6,6 +6,7 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.ityanyu.yanyuaicode.model.entity.ChatHistory;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,15 @@ public interface ChatHistoryService extends IService<ChatHistory> {
      * @return
      */
     boolean addChatHistory(Long appId, String message, String messageType, Long userId);
+
+    /**
+     * 在每次创建 AI 实例时，加载对话历史到 redis
+     * @param appId 应用标识
+     * @param chatMemory AI 实例
+     * @param MaxCount 最大数量
+     * @return
+     */
+    int loadChatHistoryToMemory(Long appId, MessageWindowChatMemory chatMemory, int MaxCount);
 
     /**
      * 根据应用标识删除聊天记录
