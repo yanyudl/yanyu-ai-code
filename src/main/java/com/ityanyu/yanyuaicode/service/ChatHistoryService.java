@@ -26,7 +26,7 @@ public interface ChatHistoryService extends IService<ChatHistory> {
      * @param userId 当前登录用户
      * @return
      */
-    boolean addChatHistory(Long appId, String message, String messageType, Long userId);
+    boolean addChatMessage(Long appId, String message, String messageType, Long userId);
 
     /**
      * 在每次创建 AI 实例时，加载对话历史到 redis

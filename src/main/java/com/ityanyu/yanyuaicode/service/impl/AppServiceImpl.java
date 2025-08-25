@@ -7,6 +7,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ityanyu.yanyuaicode.constant.AppConstant;
 import com.ityanyu.yanyuaicode.core.AiCodeGeneratorFacade;
+import com.ityanyu.yanyuaicode.core.handler.StreamHandlerExecutor;
 import com.ityanyu.yanyuaicode.exception.BusinessException;
 import com.ityanyu.yanyuaicode.exception.ErrorCode;
 import com.ityanyu.yanyuaicode.exception.ThrowUtils;
@@ -56,8 +57,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 
     @Resource
     private ChatHistoryService chatHistoryService;
-    @Autowired
-    private View error;
+
+    @Resource
+    private StreamHandlerExecutor streamHandlerExecutor;
 
     /**
      * 通过对话生成代码
@@ -86,28 +88,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持的代码生成类型");
         }
         //保存用户对话记录
-        chatHistoryService.addChatHistory(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
+        chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
         //5.调用代码生成器（即 AI）生成代码
-        Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
         // 6.收集 AI 响应并且保存
-        StringBuilder aiResponseBuilder = new StringBuilder();
-        return contentFlux
-                .map(chunk -> {
-                    //收集AI响应内容
-                    aiResponseBuilder.append(chunk);
-                    return chunk;
-                })
-                .doOnComplete(() -> {
-                    //保存 AI 响应内容
-                    String aiResponse = aiResponseBuilder.toString();
-                    if (StrUtil.isNotBlank(aiResponse)) {
-                        chatHistoryService.addChatHistory(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-                    }
-                })
-                .doOnError(error -> {
-                    // 如果 AI 响应失败也要保存错误信息
-                    String errorMessage = "AI 响应失败：" + error.getMessage();
-                });
+        return streamHandlerExecutor.doExecute(codeStream, chatHistoryService,appId,loginUser,codeGenTypeEnum);
+
     }
 
     @Override
