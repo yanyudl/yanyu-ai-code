@@ -59,4 +59,5 @@ public interface AppService extends IService<App> {
      */
     List<AppVO> getAppVOList(List<App> appList);
 
+    void generateAppScreenshotAsync(Long appId, String appUrl);
 }
