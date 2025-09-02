@@ -1,5 +1,6 @@
 package com.ityanyu.yanyuaicode.service;
 
+import com.ityanyu.yanyuaicode.model.dto.app.AppAddRequest;
 import com.ityanyu.yanyuaicode.model.dto.app.AppQueryRequest;
 import com.ityanyu.yanyuaicode.model.entity.App;
 import com.ityanyu.yanyuaicode.model.entity.User;
@@ -26,6 +27,8 @@ public interface AppService extends IService<App> {
      * @return 流式输出
      */
     Flux<String> chatToGenCode(Long appId, String message, User loginUser);
+
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 
     /**
      * 部署应用
@@ -59,5 +62,11 @@ public interface AppService extends IService<App> {
      */
     List<AppVO> getAppVOList(List<App> appList);
 
+    /**
+     * 创建应用
+     *
+     * @param appId
+     * @param appUrl
+     */
     void generateAppScreenshotAsync(Long appId, String appUrl);
 }
