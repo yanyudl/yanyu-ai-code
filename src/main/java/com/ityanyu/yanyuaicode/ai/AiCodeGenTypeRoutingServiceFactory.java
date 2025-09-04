@@ -1,6 +1,5 @@
-package com.ityanyu.yanyuaicode;
+package com.ityanyu.yanyuaicode.ai;
 
-import com.ityanyu.yanyuaicode.ai.AiCodeGenTypeRoutingService;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import jakarta.annotation.Resource;
